@@ -1,9 +1,9 @@
 import Data.HashSet as HashSet
 import Data.HashMap as HashMap
 import Data.Hashable
-import Data.Text as T
 import Data.List as List
-import Debug.Trace
+import System.Environment
+import System.IO
 
 uniqs :: (Ord a, Hashable a) => [a] -> Set a
 uniqs = uniqs' HashSet.empty
@@ -73,15 +73,19 @@ pdiff xs ys = startmatch ++ patienced ++ endmatch
 		midpairs = List.sort $ getPairs midxs midys
 		patienced = processPairs midpairs midxs midys
 
-printable (Just x, Just y) = x
-printable (Just x, Nothing) = "-" ++ x
-printable (Nothing, Just y) = "+" ++ y	
+printable (Just x, Just y) = ' ' : x
+printable (Just x, Nothing) = '-' : x
+printable (Nothing, Just y) = '+' : y	
 
 main = do
-		f1 <- readFile "pdiff.hs"
-		f2 <- readFile "pdiff2.hs"
-		let lines1 = List.lines f1
-		let lines2 = List.lines f2
-		let diff = pdiff lines1 lines2
-		mapM (putStrLn . printable) diff
+		args <- getArgs
+		if List.length args < 2
+			then hPutStrLn stderr "Insufficient arguments!"
+		else do
+			f1 <- readFile (args !! 0)
+			f2 <- readFile (args !! 1)
+			let lines1 = List.lines f1
+			let lines2 = List.lines f2
+			let diff = pdiff lines1 lines2
+			mapM_ (putStrLn . printable) diff
 
