@@ -26,31 +26,44 @@ uniqIndices xs unq = findIndices (\x -> HashSet.member x unq) xs
 uniqMap xs unique = HashMap.fromList $ List.filter (\(x,y) -> HashSet.member y unique) $ List.zip [1..] xs
 uniqCommon xs ys = HashSet.intersection (uniqs xs) (uniqs ys)
 
-blah xs ys =
+blah :: [String] -> [String] -> Set String
+blah xs ys = common
 	where
 		common = uniqCommon xs ys
-		uniqxmap = uniqMap xs common
-		uniqymap = uniqMap ys common
-		pairs = 
+		--uniqxmap = uniqMap xs common
+		--uniqymap = uniqMap ys common
 
-patience :: [a] -> [(Maybe a, Maybe a)]
-patience xs = patience' xs [] Nothing
+
+patience :: Ord a => [(a,a)] -> [(a, a)]
+patience xs = List.reverse $ List.last $ patience' xs []
 	where
-		patience' (x:xs) [] past = [(x, past)]
-		patience' (x:xs) (l:ls) past = if x < l 
+		patience' (x:xs) ls = patience' xs (findLocation x ls [])
+		patience' _ ls = ls
+		findLocation :: Ord a => (a,a) -> [[(a,a)]] -> [(a,a)] -> [[(a,a)]]
+		findLocation v [] past = [v:past]
+		findLocation v@(x, y) (l@((_,sy):history):ls) past = if y < sy 
 			then 
-				patience' xs 
+				(v:past) : ls
+			else
+				l : findLocation v ls l
 
-pdiff (x:xs) (y:ys) = startmatch ++ patienced ++ endmatch
+
+matchStart :: Eq a => [a] -> [a] -> ([(Maybe a, Maybe a)], [a], [a])
+matchStart (x:xs) (y:ys) = if x == y 
+	then ((Just x, Just y) : remainder, remxs, remys)
+	else ([], x:xs, y:ys)
+	where
+		(remainder, remxs, remys) = matchStart xs ys
+matchStart xs ys = ([], xs, ys)
+
+
+pdiff xs ys = startmatch ++ patienced ++ endmatch
 	where 
-		matchStart (x:xs) (y:ys) = if x == y 
-			then ((Just x, Just y) : remainder, remxs, remys)
-			else (remainder, remxs, remys)
-			where
-				(remainder, remxs, remys) = matchStart xs ys
 		(startmatch, nonstartxs, nonstartys) = matchStart xs ys
-		(endmatch, midxs, midys) = List.reverse $ matchStart (List.reverse nonstartxs) (List.reverse nonstartys)
-		patienced = XXX midxs midys
+		(endmatch, midxs, midys) = (List.reverse ending, List.reverse xs, List.reverse ys) 
+			where 
+				(ending, xs, ys) = matchStart (List.reverse nonstartxs) (List.reverse nonstartys)
+		patienced = [] -- XXX midxs midys
 	
-		
-
+main = do
+		putStrLn "Hello world"
